@@ -2,7 +2,7 @@
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OASIS - Monitoramento Inteligente 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,15 +18,15 @@
                         brand: {
                             50: '#f0fdf4',
                             100: '#dcfce7',
-                            500: '#7CFC00', /* Verde neon de destaque */
+                            500: '#7CFC00',
                             600: '#16a34a', 
                             700: '#15803d',
                             900: '#064e3b',
                         },
                         dark: {
-                            bg: '#020617', /* Fundo quase preto */
-                            card: '#0f172a', /* Azul ardósia muito escuro */
-                            border: '#1e293b' /* Borda discreta */
+                            bg: '#020617', 
+                            card: '#0f172a',
+                            border: '#1e293b'
                         }
                     },
                     fontFamily: {
@@ -37,44 +37,68 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .glass-effect {
             backdrop-filter: blur(12px);
-            background: rgba(15, 23, 42, 0.7); /* Neutro escuro */
+            background: rgba(15, 23, 42, 0.7); 
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #7CFC00;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         
         canvas { display: block; outline: none; }
         
-        #three-container {
+        #three-container, #camera-feed-container {
             cursor: grab;
             background: radial-gradient(circle, #1e293b 0%, #020617 100%);
         }
-        #three-container:active {
-            cursor: grabbing;
-        }
+        #three-container:active, #camera-feed-container:active { cursor: grabbing; }
 
-        .view-transition {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .view-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Efeitos de CCTV */
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            animation: scan 6s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .rec-dot { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Estilos do Joystick Corrigidos */
+        .joystick-base {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .joystick-handle {
+            width: 50px;
+            height: 50px;
+            background: #7CFC00;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(124, 252, 0, 0.4);
+            cursor: pointer;
+            z-index: 20;
+            pointer-events: none; /* Deixa o evento passar para a base */
         }
 
         @media (max-width: 640px) {
-            #three-container canvas {
-                touch-action: none;
-            }
+            #three-container canvas, #camera-feed-container canvas { touch-action: none; }
         }
     </style>
 </head>
@@ -83,33 +107,33 @@
     <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300 backdrop-blur-sm"></div>
 
     <div class="flex h-screen overflow-hidden">
-        <!-- SIDEBAR - Agora em tons de cinza/preto -->
+        <!-- SIDEBAR -->
         <aside id="sidebar" class="fixed lg:relative flex flex-col w-72 h-full bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 z-50 -translate-x-full lg:translate-x-0 shrink-0">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-brand-500/20">O</div>
-                        <span class="text-2xl font-black tracking-tighter text-slate-900 dark:text-white font-sans">OASIS</span>
+                        <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg">O</div>
+                        <span class="text-2xl font-black tracking-tighter text-slate-900 dark:text-white font-sans uppercase">Oasis</span>
                     </div>
                     <button class="lg:hidden text-slate-400 p-2" onclick="toggleSidebar()">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                 </div>
                 
                 <nav class="space-y-1.5">
-                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-brand-500/10 text-brand-500 font-bold text-sm text-left">
+                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-brand-500/10 text-brand-500 font-bold text-sm text-left font-sans">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                         Dashboard Geral
                     </button>
-                    <button onclick="navigateTo('clima')" id="nav-clima" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m4.93 4.93 14.14 14.14"/><path d="M2 12h20"/><path d="m19.07 4.93-14.14 14.14"/></svg>
-                        Clima & Ambiente
+                    <button onclick="navigateTo('clima')" id="nav-clima" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Câmera ao Vivo
                     </button>
-                    <button onclick="navigateTo('nutrientes')" id="nav-nutrientes" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
+                    <button onclick="navigateTo('nutrientes')" id="nav-nutrientes" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
                         Solução Nutritiva
                     </button>
-                    <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
+                    <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 12 12 13 9"/></svg>
                         Análise Biométrica
                     </button>
@@ -117,14 +141,11 @@
             </div>
             
             <div class="mt-auto p-6 border-t border-slate-200 dark:border-slate-800">
-                <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl p-4 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800">
-                    <p class="text-[10px] text-slate-400 mb-1 uppercase font-bold tracking-widest text-center lg:text-left">Status da Estufa</p>
+                <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl p-4 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 text-center lg:text-left">
+                    <p class="text-[10px] text-slate-400 mb-1 uppercase font-bold tracking-widest leading-none mb-2">Status da Estufa</p>
                     <div class="flex items-center justify-center lg:justify-start gap-3">
-                        <div class="relative">
-                            <div class="w-2.5 h-2.5 bg-brand-500 rounded-full"></div>
-                            <div class="absolute inset-0 w-2.5 h-2.5 bg-brand-500 rounded-full animate-ping"></div>
-                        </div>
-                        <span class="text-sm font-bold uppercase tracking-tight">Em Operação</span>
+                        <div class="w-2 h-2 bg-brand-500 rounded-full animate-pulse shadow-[0_0_8px_#7CFC00]"></div>
+                        <span class="text-xs font-bold uppercase tracking-tight">Ativo</span>
                     </div>
                 </div>
             </div>
@@ -132,8 +153,6 @@
 
         <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
-            
-            <!-- HEADER - Neutro -->
             <header class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-lg z-30 border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 py-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
                     <button class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500" onclick="toggleSidebar()">
@@ -142,168 +161,147 @@
                     <h1 id="view-title" class="text-base lg:text-lg font-black tracking-tight uppercase truncate text-slate-900 dark:text-white">Monitoramento 3D</h1>
                 </div>
 
-                <div class="flex items-center gap-3 lg:gap-4">
+                <div class="flex items-center gap-3 lg:gap-4 text-slate-900 dark:text-white font-mono text-xs">
                     <div class="hidden xs:block text-right">
                         <p id="current-date" class="text-[9px] text-slate-400 uppercase font-bold tracking-widest leading-none mb-1">--</p>
-                        <p id="current-time" class="text-sm lg:text-base font-mono font-bold leading-none dark:text-white">--:--:--</p>
+                        <p id="current-time" class="font-bold">--:--:--</p>
                     </div>
-                    <button onclick="toggleDarkMode()" class="p-2 lg:p-2.5 rounded-xl lg:rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 border border-transparent dark:border-slate-700">
-                        <svg id="sun-icon" class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                        <svg id="moon-icon" class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    <button onclick="toggleDarkMode()" class="p-2 lg:p-2.5 rounded-xl lg:rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-700 transition-all active:scale-95">
+                        <svg id="sun-icon" class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        <svg id="moon-icon" class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                     </button>
                 </div>
             </header>
 
-            <!-- VIEW CONTAINER - Fundo escuro neutro -->
-            <div id="view-container" class="flex-1 overflow-y-auto custom-scrollbar p-3 lg:p-6 pb-24 space-y-4 lg:space-y-8 bg-slate-50 dark:bg-dark-bg">
+            <!-- CONTENT AREA -->
+            <div id="view-container" class="flex-1 overflow-y-auto custom-scrollbar p-3 lg:p-6 pb-24 space-y-6 bg-slate-50 dark:bg-dark-bg">
                 
                 <!-- DASHBOARD VIEW -->
-                <div id="view-dashboard" class="space-y-4 lg:space-y-8 view-transition">
-                    
-                    <!-- ESTRUTURA 3D INTERATIVA -->
-                    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative">
-                        <div class="p-5 lg:p-8 pb-3 flex justify-between items-center">
-                            <div>
-                                <h2 class="text-base lg:text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Gêmeo Digital 3D</h2>
-                                <p class="text-[10px] lg:text-xs text-slate-400 font-medium">Renderização em tempo real</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-                                <span class="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-brand-500">Live Sync</span>
-                            </div>
+                <div id="view-dashboard" class="space-y-6 view-transition">
+                    <!-- Gêmeo Digital -->
+                    <section class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative">
+                        <div class="p-5 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800">
+                            <h2 class="text-sm lg:text-base font-black uppercase tracking-tighter dark:text-white">Gêmeo Digital 3D</h2>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-brand-500 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span> Live Sync
+                            </span>
                         </div>
-
-                        <!-- Container do Canvas 3D -->
-                        <div class="relative w-full h-[400px] sm:h-[500px] lg:h-auto lg:aspect-[16/7] overflow-hidden group">
+                        <div class="relative w-full h-[400px] sm:h-[500px] lg:h-auto lg:aspect-[21/9] overflow-hidden">
                             <div id="three-container" class="w-full h-full"></div>
+                        </div>
+                    </section>
+
+                    <!-- Métricas KPIs -->
+                    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
+                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">VPD Atual</p>
+                            <p id="kpi-vpd" class="text-2xl font-black tracking-tighter">1.2<span class="text-xs ml-1 text-slate-500">kPa</span></p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
+                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">pH Médio</p>
+                            <p id="kpi-ph" class="text-2xl font-black tracking-tighter">6.2</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">Nível Tanque</p>
+                            <p id="kpi-tank" class="text-2xl font-black text-brand-500 tracking-tighter font-mono">88%</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
+                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">Ciclo</p>
+                            <p class="text-2xl font-black tracking-tighter">24<span class="text-xs ml-1 text-slate-500 font-sans">d</span></p>
+                        </div>
+                    </section>
+
+                    <!-- Gráficos -->
+                    <section class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Estabilidade Ambiental (24h)</h3>
+                        </div>
+                        <div class="h-[250px] w-full">
+                            <canvas id="mainDashChart"></canvas>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- MONITORAMENTO (Câmara e Joystick) -->
+                <div id="view-clima" class="hidden space-y-6 view-transition">
+                    <div class="max-w-2xl mx-auto flex flex-col items-center">
+                        <section class="w-full bg-black rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden relative aspect-video">
+                            <!-- CCTV UI -->
+                            <div class="absolute inset-0 pointer-events-none z-10 p-5">
+                                <div class="scanline"></div>
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
+                                        <div class="w-2 h-2 bg-red-600 rounded-full rec-dot shadow-[0_0_10px_#dc2626]"></div>
+                                        <span class="text-white text-[8px] font-mono font-bold tracking-widest uppercase leading-none">REC • CAM_01</span>
+                                    </div>
+                                    <div class="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md font-mono text-white text-[9px] leading-none">
+                                        <p id="cctv-time">--:--:--</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feed 3D Interno -->
+                            <div id="camera-feed-container" class="w-full h-full"></div>
+                        </section>
+
+                        <!-- Joystick Control -->
+                        <div class="mt-12 flex flex-col items-center gap-6">
+                            <div class="flex items-center gap-4">
+                                <div class="h-px w-8 bg-slate-800"></div>
+                                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Controlo Pan/Tilt</span>
+                                <div class="h-px w-8 bg-slate-800"></div>
+                            </div>
                             
-                            <!-- Overlay de Comandos -->
-                            <div class="absolute inset-0 p-4 lg:p-6 flex flex-col justify-between pointer-events-none">
-                                <div class="flex justify-start">
-                                    <div class="glass-effect px-3 py-1.5 rounded-lg text-white pointer-events-auto text-[10px] font-bold uppercase tracking-wider">
-                                        Setor Alfa-01
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row justify-between items-end gap-4 pointer-events-none">
-                                    <div class="glass-effect p-3 lg:p-4 rounded-xl lg:rounded-2xl text-white pointer-events-auto hidden xs:block">
-                                        <div class="flex gap-4">
-                                            <div class="text-center">
-                                                <p class="text-[8px] uppercase opacity-60 mb-0.5">Estrutura</p>
-                                                <p class="text-[10px] lg:text-xs font-bold text-brand-500">Nominal</p>
-                                            </div>
-                                            <div class="text-center border-l border-white/20 pl-4">
-                                                <p class="text-[8px] uppercase opacity-60 mb-0.5">Vidros</p>
-                                                <p class="text-[10px] lg:text-xs font-bold text-blue-400">Limpos</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <button onclick="scrollToMetrics()" class="pointer-events-auto w-full sm:w-auto bg-white text-slate-950 font-black px-6 lg:px-8 py-3.5 lg:py-4 rounded-xl lg:rounded-2xl hover:bg-brand-500 transition-all transform active:scale-95 shadow-2xl uppercase text-[10px] lg:text-xs tracking-tighter">
-                                        Ver Métricas da Estufa
-                                    </button>
-                                </div>
+                            <!-- Joystick corrigido -->
+                            <div class="joystick-base shadow-2xl" id="camera-joystick">
+                                <div class="joystick-handle" id="joystick-knob"></div>
                             </div>
-                        </div>
-                    </section>
-
-                    <!-- KPI HIGHLIGHTS - Neutros com acento verde -->
-                    <section id="metrics-section" class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">Crescimento</h3>
-                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
-                                <p class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">24<span class="text-[10px] font-medium text-slate-400 ml-1">d</span></p>
-                                <span class="text-[8px] lg:text-[10px] text-brand-500 font-bold">+12%</span>
-                            </div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">VPD Atual</h3>
-                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
-                                <p id="kpi-vpd" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">1.2<span class="text-[8px] font-medium text-slate-400 uppercase ml-1">kPa</span></p>
-                                <span class="text-[8px] lg:text-[10px] text-brand-500 font-bold uppercase">OK</span>
-                            </div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">pH Solução</h3>
-                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
-                                <p id="kpi-ph" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">6.2</p>
-                                <div class="w-full xs:w-12 lg:w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-1 xs:mt-0">
-                                    <div class="bg-brand-500 h-full w-[62%]"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">Tanque</h3>
-                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
-                                <p id="kpi-tank" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">88<span class="text-[10px] font-medium text-slate-400 ml-1">%</span></p>
-                                <span class="text-[8px] lg:text-[10px] text-blue-500 font-bold uppercase">Estável</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- GRÁFICOS - Cores ajustadas -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-                        <div class="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 p-5 lg:p-8 shadow-sm h-[300px] lg:h-[400px] flex flex-col">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-sm lg:text-lg font-black uppercase tracking-tighter text-slate-900 dark:text-white">Estabilidade (24h)</h3>
-                                <div class="flex gap-2">
-                                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-brand-500"></div><span class="text-[8px] font-bold uppercase text-slate-400">T</span></div>
-                                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-blue-500"></div><span class="text-[8px] font-bold uppercase text-slate-400">U</span></div>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-h-0">
-                                <canvas id="mainDashChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 p-5 lg:p-8 shadow-sm flex flex-col max-h-[400px]">
-                            <h3 class="text-sm lg:text-lg font-black uppercase tracking-tighter mb-4 lg:mb-6 text-slate-900 dark:text-white">Alertas</h3>
-                            <div id="alerts-container" class="space-y-3 lg:space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar"></div>
+                            
+                            <p class="text-[9px] text-slate-600 font-medium uppercase tracking-widest">Arraste para mover a câmara</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- OUTRAS VIEWS -->
-                <div id="view-clima" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Clima</p></div>
-                <div id="view-nutrientes" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Nutrientes</p></div>
-                <div id="view-biometria" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Biometria</p></div>
+                <div id="view-nutrientes" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase">Solução Nutritiva</div>
+                <div id="view-biometria" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase">Análise Biométrica</div>
 
             </div>
 
             <footer class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 py-3 text-center shrink-0">
-                <p class="text-[8px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">&copy; 2026 OASIS - Greenhouse Intelligence</p>
+                <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.3em]">&copy; 2026 OASIS SYSTEMS • PRECISION BOTANY</p>
             </footer>
         </main>
     </div>
 
     <script>
-        // --- 1. LÓGICA DO DASHBOARD ---
         const DATA = { temp: 24.5, vpd: 1.25, ph: 6.2 };
+        let joystickActive = false;
+        let joystickVec = { x: 0, y: 0 };
+        let camTargetRotation = { y: 0, x: 0 };
         let charts = {};
 
         function initTime() {
             const update = () => {
                 const now = new Date();
-                document.getElementById('current-time').textContent = now.toLocaleTimeString('pt-BR');
-                document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timeStr = now.toLocaleTimeString('pt-BR', { hour12: false });
+                const ids = ['current-time', 'cctv-time'];
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.textContent = timeStr;
+                });
+                const dateEl = document.getElementById('current-date');
+                if(dateEl) dateEl.textContent = now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
             };
             setInterval(update, 1000);
             update();
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            const isOpen = sidebar.classList.contains('translate-x-0');
-            
-            if (isOpen) {
-                sidebar.classList.remove('translate-x-0');
-                sidebar.classList.add('-translate-x-full');
-                backdrop.classList.add('hidden');
-            } else {
-                sidebar.classList.add('translate-x-0');
-                sidebar.classList.remove('-translate-x-full');
-                backdrop.classList.remove('hidden');
+            const s = document.getElementById('sidebar');
+            const b = document.getElementById('sidebar-backdrop');
+            if(s && b) {
+                s.classList.toggle('-translate-x-full');
+                b.classList.toggle('hidden');
             }
         }
 
@@ -315,31 +313,43 @@
         function navigateTo(id) {
             const views = ['dashboard', 'clima', 'nutrientes', 'biometria'];
             views.forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                const btn = document.getElementById(`nav-${v}`);
-                btn.classList.remove('bg-brand-500/10', 'text-brand-500', 'font-bold');
-                btn.classList.add('text-slate-500');
+                const viewEl = document.getElementById(`view-${v}`);
+                const navEl = document.getElementById(`nav-${v}`);
+                if (viewEl) viewEl.classList.add('hidden');
+                if (navEl) {
+                    navEl.classList.remove('bg-brand-500/10', 'text-brand-500', 'font-bold');
+                    navEl.classList.add('text-slate-500');
+                }
             });
-            document.getElementById(`view-${id}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${id}`);
-            activeBtn.classList.add('bg-brand-500/10', 'text-brand-500', 'font-bold');
-            activeBtn.classList.remove('text-slate-500');
-            document.getElementById('view-title').textContent = id === 'dashboard' ? 'Monitoramento 3D' : id.charAt(0).toUpperCase() + id.slice(1);
+
+            const activeView = document.getElementById(`view-${id}`);
+            const activeNav = document.getElementById(`nav-${id}`);
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeNav) {
+                activeNav.classList.add('bg-brand-500/10', 'text-brand-500', 'font-bold');
+                activeNav.classList.remove('text-slate-500');
+            }
             
+            const titles = { dashboard: 'Monitoramento 3D', clima: 'Câmera ao Vivo', nutrientes: 'Solução Nutritiva', biometria: 'Análise Biométrica' };
+            const titleEl = document.getElementById('view-title');
+            if(titleEl) titleEl.textContent = titles[id] || 'Oasis';
+            
+            if (id === 'clima') handleCameraResize();
             if (window.innerWidth < 1024) toggleSidebar();
         }
 
         function scrollToMetrics() {
-            document.getElementById('metrics-section').scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById('metrics-section');
+            if(el) el.scrollIntoView({ behavior: 'smooth' });
         }
 
         function initCharts() {
-            const ctx = document.getElementById('mainDashChart').getContext('2d');
+            const ctx = document.getElementById('mainDashChart');
+            if(!ctx) return;
             const isDark = document.documentElement.classList.contains('dark');
-            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
             const textColor = isDark ? '#94a3b8' : '#64748b';
 
-            if (charts.main) charts.main.destroy();
+            if(charts.main) charts.main.destroy();
 
             charts.main = new Chart(ctx, {
                 type: 'line',
@@ -350,177 +360,208 @@
                         { label: 'Umid', data: [65, 66, 68, 65, 60, 58, 55, 58, 62, 65, 66, 65], borderColor: '#3b82f6', borderDash: [5, 5], tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
                     ]
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        x: { display: true, grid: { display: false }, ticks: { color: textColor, font: { size: 9, weight: 'bold' } } },
-                        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 } } } 
-                    } 
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 } } },
+                             y: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: textColor, font: { size: 9 } } } } }
             });
         }
 
-        // --- 2. LÓGICA THREE.JS ---
-        let scene, camera, renderer, worldGroup;
-        let isDragging = false;
-        let previousMouseX = 0, previousMouseY = 0;
+        // --- THREE.JS ---
+        let mainScene, mainCamera, mainRenderer, mainGroup;
+        let camScene, camCamera, camRenderer, camGroup;
+        let waterDrops = [];
+        let isDragging = false, prevX = 0, prevY = 0;
 
         function init3D() {
-            const container = document.getElementById('three-container');
-            const w = container.clientWidth;
-            const h = container.clientHeight;
+            // Dashboard
+            const mainCont = document.getElementById('three-container');
+            if(mainCont) {
+                mainScene = new THREE.Scene();
+                mainCamera = new THREE.PerspectiveCamera(45, mainCont.clientWidth / mainCont.clientHeight, 0.1, 1000);
+                mainCamera.position.set(13, 10, 16);
+                mainCamera.lookAt(0, 1.5, 0);
+                mainRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                mainRenderer.setSize(mainCont.clientWidth, mainCont.clientHeight);
+                mainRenderer.setPixelRatio(window.devicePixelRatio);
+                mainCont.appendChild(mainRenderer.domElement);
+                mainGroup = new THREE.Group();
+                mainScene.add(mainGroup);
+                setupLighting(mainScene);
+                buildGreenhouse(mainGroup, false);
 
-            scene = new THREE.Scene();
-            
-            const fov = window.innerWidth < 640 ? 55 : 45;
-            camera = new THREE.PerspectiveCamera(fov, w / h, 0.1, 1000);
-            camera.position.set(10, 8, 14);
-            camera.lookAt(0, 1.5, 0);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(w, h);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
-            const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-            sunLight.position.set(10, 20, 10);
-            sunLight.castShadow = true;
-            scene.add(sunLight);
-
-            worldGroup = new THREE.Group();
-            scene.add(worldGroup);
-
-            // Chão neutro (cinza asfalto suave) para reduzir o excesso de verde
-            const groundGeo = new THREE.PlaneGeometry(100, 100);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.01;
-            ground.receiveShadow = true;
-            worldGroup.add(ground);
-
-            // Grelha discreta
-            const grid = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
-            worldGroup.add(grid);
-
-            create3DGreenhouse();
-
-            // Interação
-            const onStart = (x, y) => { isDragging = true; previousMouseX = x; previousMouseY = y; };
-            const onEnd = () => { isDragging = false; };
-            const onMove = (x, y) => {
-                if (isDragging) {
-                    const deltaX = x - previousMouseX;
-                    const deltaY = y - previousMouseY;
-                    worldGroup.rotation.y += deltaX * 0.005;
-                    worldGroup.rotation.x += deltaY * 0.005;
-                    worldGroup.rotation.x = Math.max(-Math.PI/6, Math.min(Math.PI/3, worldGroup.rotation.x));
-                    previousMouseX = x;
-                    previousMouseY = y;
-                }
-            };
-
-            container.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
-            window.addEventListener('mouseup', onEnd);
-            container.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
-            container.addEventListener('touchstart', (e) => {
-                if(e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
-            }, {passive: true});
-            container.addEventListener('touchend', onEnd);
-            container.addEventListener('touchmove', (e) => {
-                if(e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
-            }, {passive: true});
-
-            window.addEventListener('resize', () => {
-                const nw = container.clientWidth;
-                const nh = container.clientHeight;
-                camera.aspect = nw / nh;
-                camera.fov = window.innerWidth < 640 ? 55 : 45;
-                camera.updateProjectionMatrix();
-                renderer.setSize(nw, nh);
-            });
-        }
-
-        function create3DGreenhouse() {
-            const woodMat = new THREE.MeshStandardMaterial({ color: 0xE3CBA8, roughness: 0.8 });
-            const glassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.2, metalness: 0.5, roughness: 0.1, side: THREE.DoubleSide });
-            
-            const w = 4, l = 6, h = 3, rh = 1.2, t = 0.12;
-            const greenhouse = new THREE.Group();
-
-            const addBeam = (width, height, depth, x, y, z, rx=0, ry=0, rz=0) => {
-                const geo = new THREE.BoxGeometry(width, height, depth);
-                const mesh = new THREE.Mesh(geo, woodMat);
-                mesh.position.set(x, y, z);
-                mesh.rotation.set(rx, ry, rz);
-                greenhouse.add(mesh);
-            };
-
-            // Pilares e Base
-            addBeam(w, t, t, 0, 0, l/2); addBeam(w, t, t, 0, 0, -l/2);
-            addBeam(t, t, l, w/2, 0, 0); addBeam(t, t, l, -w/2, 0, 0);
-            for(let x of [-w/2, w/2]) { for(let z of [-l/2, 0, l/2]) { addBeam(t, h, t, x, h/2, z); } }
-            addBeam(w, t, t, 0, h, l/2); addBeam(w, t, t, 0, h, -l/2);
-            addBeam(t, t, l, w/2, h, 0); addBeam(t, t, l, -w/2, h, 0);
-
-            // Telhado
-            const roofAngle = Math.atan(rh / (w/2));
-            const roofSide = Math.sqrt(rh*rh + (w/2)*(w/2));
-            for(let z of [-l/2, 0, l/2]) {
-                addBeam(roofSide, t, t, -w/4, h + rh/2, z, 0, 0, roofAngle);
-                addBeam(roofSide, t, t, w/4, h + rh/2, z, 0, 0, -roofAngle);
-            }
-            addBeam(t, t, l, 0, h + rh, 0);
-
-            // Vidros
-            const addGlass = (gw, gh, gd, x, y, z, rx=0, ry=0, rz=0) => {
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), glassMat);
-                mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz);
-                greenhouse.add(mesh);
-            };
-            addGlass(w, h, 0.01, 0, h/2, l/2); addGlass(w, h, 0.01, 0, h/2, -l/2);
-            addGlass(0.01, h, l, w/2, h/2, 0); addGlass(0.01, h, l, -w/2, h/2, 0);
-            addGlass(roofSide, 0.01, l, -w/4, h + rh/2, 0, 0, 0, roofAngle);
-            addGlass(roofSide, 0.01, l, w/4, h + rh/2, 0, 0, 0, -roofAngle);
-
-            // Torres de Plantas
-            const plantMat = new THREE.MeshStandardMaterial({ color: 0x4ade80 });
-            for(let z = -l/2 + 1.2; z <= l/2 - 1.2; z += 1.8) {
-                [-w/2 + 1, w/2 - 1].forEach(x => {
-                    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, h*0.7), new THREE.MeshStandardMaterial({color: 0x334155}));
-                    tower.position.set(x, h/2, z); greenhouse.add(tower);
-                    for(let i=0; i<6; i++) {
-                        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), plantMat);
-                        leaf.position.set(x, 0.6 + i*0.4, z); 
-                        greenhouse.add(leaf);
+                mainCont.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+                window.addEventListener('mouseup', () => isDragging = false);
+                mainCont.addEventListener('mousemove', (e) => {
+                    if(isDragging) {
+                        mainGroup.rotation.y += (e.clientX - prevX) * 0.005;
+                        mainGroup.rotation.x = Math.max(-0.6, Math.min(0.6, mainGroup.rotation.x + (e.clientY - prevY) * 0.005));
+                        prevX = e.clientX; prevY = e.clientY;
                     }
                 });
             }
-            worldGroup.add(greenhouse);
+
+            // CCTV Camera
+            const camCont = document.getElementById('camera-feed-container');
+            if(camCont) {
+                camScene = new THREE.Scene();
+                camCamera = new THREE.PerspectiveCamera(55, camCont.clientWidth / camCont.clientHeight, 0.1, 1000);
+                camCamera.position.set(-1.4, 2, 2.3); 
+                camCamera.lookAt(0.5, 1, -0.5);
+                camRenderer = new THREE.WebGLRenderer({ antialias: true });
+                camRenderer.setSize(camCont.clientWidth, camCont.clientHeight);
+                camCont.appendChild(camRenderer.domElement);
+                camGroup = new THREE.Group();
+                camScene.add(camGroup);
+                setupLighting(camScene);
+                buildGreenhouse(camGroup, true);
+                initJoystick();
+            }
+        }
+
+        function initJoystick() {
+            const base = document.getElementById('camera-joystick');
+            const knob = document.getElementById('joystick-knob');
+            if(!base || !knob) return;
+
+            const update = (cx, cy) => {
+                const r = base.getBoundingClientRect();
+                const center = { x: r.left + r.width/2, y: r.top + r.height/2 };
+                let dx = cx - center.x;
+                let dy = cy - center.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const max = 35;
+                if(dist > max) { dx *= max/dist; dy *= max/dist; }
+                
+                // Aplica a transformação mantendo a centragem do CSS
+                knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                joystickVec.x = dx/max;
+                joystickVec.y = dy/max;
+            };
+
+            const onStart = (e) => { 
+                joystickActive = true; 
+                const touch = e.touches ? e.touches[0] : e;
+                update(touch.clientX, touch.clientY); 
+            };
+            const onEnd = () => { 
+                joystickActive = false; 
+                joystickVec = {x:0,y:0}; 
+                knob.style.transform = `translate(-50%, -50%)`; 
+            };
+            
+            base.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', (e) => { if(joystickActive) update(e.clientX, e.clientY); });
+            window.addEventListener('mouseup', onEnd);
+            
+            base.addEventListener('touchstart', (e) => { e.preventDefault(); onStart(e); }, {passive: false});
+            window.addEventListener('touchmove', (e) => { 
+                if(joystickActive) {
+                    e.preventDefault();
+                    update(e.touches[0].clientX, e.touches[0].clientY); 
+                }
+            }, {passive: false});
+            window.addEventListener('touchend', onEnd);
+        }
+
+        function setupLighting(s) {
+            s.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const d = new THREE.DirectionalLight(0xffffff, 0.8);
+            d.position.set(10, 20, 10);
+            s.add(d);
+        }
+
+        function buildGreenhouse(group, withWater) {
+            const wood = new THREE.MeshStandardMaterial({ color: 0xE3CBA8, roughness: 0.8 });
+            const glass = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+            const w=4, l=6, h=3, rh=1.2, t=0.12;
+
+            const addB = (wb, hb, db, x, y, z, rx=0, rz=0) => {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(wb, hb, db), wood);
+                m.position.set(x, y, z); m.rotation.set(rx, 0, rz);
+                group.add(m);
+            };
+
+            // Structure
+            addB(w, t, t, 0, 0, l/2); addB(w, t, t, 0, 0, -l/2);
+            addB(t, t, l, w/2, 0, 0); addB(t, t, l, -w/2, 0, 0);
+            for(let x of [-w/2, w/2]) { for(let z of [-l/2, 0, l/2]) { addB(t, h, t, x, h/2, z); } }
+            addB(w, t, t, 0, h, l/2); addB(w, t, t, 0, h, -l/2);
+            addB(t, t, l, w/2, h, 0); addB(t, t, l, -w/2, h, 0);
+            const ra = Math.atan(rh/(w/2)), rs = Math.sqrt(rh*rh + (w/2)*(w/2));
+            for(let z of [-l/2, 0, l/2]) { addB(rs, t, t, -w/4, h+rh/2, z, 0, ra); addB(rs, t, t, w/4, h+rh/2, z, 0, -ra); }
+            addB(t, t, l, 0, h+rh, 0);
+
+            // Glass Panels (Offset to prevent glitch)
+            const addG = (gw, gh, gd, x, y, z, rx=0, rz=0) => {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), glass);
+                m.position.set(x, y, z); m.rotation.set(rx, 0, rz);
+                group.add(m);
+            };
+            addG(w-t, h-t, 0.01, 0, h/2, l/2-0.02); addG(w-t, h-t, 0.01, 0, h/2, -l/2+0.02);
+            addG(0.01, h-t, l-t, w/2-0.02, h/2, 0); addG(0.01, h-t, l-t, -w/2+0.02, h/2, 0);
+            addG(rs-t, 0.01, l-t, -w/4, h+rh/2, 0, 0, ra); addG(rs-t, 0.01, l-t, w/4, h+rh/2, 0, 0, -ra);
+
+            // Plants
+            const plantMat = new THREE.MeshStandardMaterial({ color: 0x4ade80 });
+            for(let z = -l/2 + 1.2; z <= l/2 - 1.2; z += 1.8) {
+                [-w/2 + 1, w/2 - 1].forEach(x => {
+                    const twr = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, h*0.75), new THREE.MeshStandardMaterial({color: 0x334155}));
+                    twr.position.set(x, h/2, z); group.add(twr);
+                    for(let i=0; i<7; i++) {
+                        const lf = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), plantMat);
+                        lf.position.set(x, 0.6 + i*0.4, z); group.add(lf);
+                        if(withWater && Math.random() > 0.4) {
+                            const dp = new THREE.Mesh(new THREE.SphereGeometry(0.02, 4, 4), new THREE.MeshBasicMaterial({color: 0x60A5FA, transparent:true, opacity:0.6}));
+                            dp.position.set(x+(Math.random()-0.5)*0.1, 0.6+i*0.4, z+(Math.random()-0.5)*0.1);
+                            dp.userData = { startY: dp.position.y }; group.add(dp); waterDrops.push(dp);
+                        }
+                    }
+                });
+            }
+        }
+
+        function handleCameraResize() {
+            const c = document.getElementById('camera-feed-container');
+            if(c && camCamera && camRenderer) {
+                camCamera.aspect = c.clientWidth / c.clientHeight;
+                camCamera.updateProjectionMatrix();
+                camRenderer.setSize(c.clientWidth, c.clientHeight);
+            }
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            if (!isDragging) worldGroup.rotation.y += 0.002;
-            renderer.render(scene, camera);
+            if(!isDragging && mainGroup) mainGroup.rotation.y += 0.0015;
+            
+            if(camCamera && joystickActive) {
+                // Rotação PTZ da câmara
+                camTargetRotation.y -= joystickVec.x * 0.05;
+                camTargetRotation.x = Math.max(-0.8, Math.min(0.8, camTargetRotation.x - joystickVec.y * 0.05));
+                camCamera.rotation.set(camTargetRotation.x, camTargetRotation.y, 0, 'YXZ');
+            }
+
+            waterDrops.forEach(d => { d.position.y -= 0.012; if(d.position.y < 0.2) d.position.y = d.userData.startY + 0.3; });
+            if(mainRenderer && mainScene && mainCamera) mainRenderer.render(mainScene, mainCamera);
+            if(camRenderer && camScene && camCamera) camRenderer.render(camScene, camCamera);
         }
 
         window.onload = () => {
             initTime();
-            initCharts();
             init3D();
+            initCharts();
             animate();
+            window.addEventListener('resize', () => {
+                const m = document.getElementById('three-container');
+                if(m && mainCamera && mainRenderer) {
+                    mainCamera.aspect = m.clientWidth / m.clientHeight;
+                    mainCamera.updateProjectionMatrix();
+                    mainRenderer.setSize(m.clientWidth, m.clientHeight);
+                }
+                handleCameraResize();
+            });
             setInterval(() => {
-                DATA.vpd = (1.1 + Math.random() * 0.3).toFixed(2);
-                DATA.ph = (6.1 + Math.random() * 0.2).toFixed(1);
-                document.getElementById('kpi-vpd').innerHTML = `${DATA.vpd}<span class="text-[8px] lg:text-sm font-medium text-slate-400 uppercase ml-1">kPa</span>`;
-                document.getElementById('kpi-ph').textContent = DATA.ph;
+                const vpd = document.getElementById('kpi-vpd');
+                if(vpd) vpd.innerHTML = `${(1.1 + Math.random() * 0.3).toFixed(2)}<span class="text-[8px] lg:text-sm font-medium text-slate-400 uppercase ml-1">kPa</span>`;
             }, 3000);
         };
     </script>
