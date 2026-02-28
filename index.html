@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OASSIS - Monitoramento Inteligente</title>
-    <!-- Tailwind CSS CDN -->
+    <title>OASIS - Monitoramento Inteligente 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
@@ -19,15 +18,15 @@
                         brand: {
                             50: '#f0fdf4',
                             100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
+                            500: '#7CFC00', /* Verde neon de destaque */
+                            600: '#16a34a', 
                             700: '#15803d',
-                            900: '#14532d',
+                            900: '#064e3b',
                         },
                         dark: {
-                            bg: '#0f172a',
-                            card: '#1e293b',
-                            border: '#334155'
+                            bg: '#020617', /* Fundo quase preto */
+                            card: '#0f172a', /* Azul ardósia muito escuro */
+                            border: '#1e293b' /* Borda discreta */
                         }
                     },
                     fontFamily: {
@@ -40,8 +39,9 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .glass-effect {
-            backdrop-filter: blur(8px);
-            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.7); /* Neutro escuro */
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
@@ -50,78 +50,76 @@
             background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #475569;
+            background: #334155;
             border-radius: 10px;
         }
-        .view-transition {
-            transition: all 0.3s ease-in-out;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #7CFC00;
         }
-        /* Mobile sidebar hidden by default, visible with class */
-        @media (max-width: 1023px) {
-            #sidebar {
-                transform: translateX(-100%);
-                position: fixed;
-                height: 100%;
-                z-index: 50;
-            }
-            #sidebar.open {
-                transform: translateX(0);
-            }
-            #sidebar-backdrop.active {
-                display: block;
+        
+        canvas { display: block; outline: none; }
+        
+        #three-container {
+            cursor: grab;
+            background: radial-gradient(circle, #1e293b 0%, #020617 100%);
+        }
+        #three-container:active {
+            cursor: grabbing;
+        }
+
+        .view-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (max-width: 640px) {
+            #three-container canvas {
+                touch-action: none;
             }
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden text-left">
+<body class="bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden text-left">
 
-    <!-- Backdrop para Mobile Sidebar -->
     <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300 backdrop-blur-sm"></div>
 
-    <!-- Wrapper Principal -->
     <div class="flex h-screen overflow-hidden">
-
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="flex flex-col w-72 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-dark-border transition-all duration-300">
+        <!-- SIDEBAR - Agora em tons de cinza/preto -->
+        <aside id="sidebar" class="fixed lg:relative flex flex-col w-72 h-full bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 z-50 -translate-x-full lg:translate-x-0 shrink-0">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20">O</div>
-                        <span class="text-2xl font-black tracking-tighter text-brand-600 dark:text-brand-500 font-sans">OASSIS</span>
+                        <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-brand-500/20">O</div>
+                        <span class="text-2xl font-black tracking-tighter text-slate-900 dark:text-white font-sans">OASIS</span>
                     </div>
-                    <button class="lg:hidden text-slate-400" onclick="toggleSidebar()">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 6-12 12"/><path d="m6 6 12 12"/></svg>
+                    <button class="lg:hidden text-slate-400 p-2" onclick="toggleSidebar()">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                 </div>
                 
                 <nav class="space-y-1.5">
-                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-500 font-bold text-sm text-left">
+                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-brand-500/10 text-brand-500 font-bold text-sm text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                         Dashboard Geral
                     </button>
-                    <button onclick="navigateTo('clima')" id="nav-clima" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm font-medium text-left">
+                    <button onclick="navigateTo('clima')" id="nav-clima" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m4.93 4.93 14.14 14.14"/><path d="M2 12h20"/><path d="m19.07 4.93-14.14 14.14"/></svg>
                         Clima & Ambiente
                     </button>
-                    <button onclick="navigateTo('nutrientes')" id="nav-nutrientes" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm font-medium text-left">
+                    <button onclick="navigateTo('nutrientes')" id="nav-nutrientes" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
                         Solução Nutritiva
                     </button>
-                    <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm font-medium text-left">
+                    <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 12 12 13 9"/></svg>
                         Análise Biométrica
-                    </button>
-                    <button onclick="navigateTo('hidraulica')" id="nav-hidraulica" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm font-medium text-left">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>
-                        Hidráulica & Fluxo
                     </button>
                 </nav>
             </div>
             
-            <div class="mt-auto p-6 border-t border-slate-200 dark:border-dark-border">
-                <div class="bg-brand-900 rounded-3xl p-5 text-white shadow-xl shadow-brand-900/20">
-                    <p class="text-[10px] text-brand-100 mb-1 uppercase font-bold tracking-widest">Status da Estufa</p>
-                    <div class="flex items-center gap-3">
+            <div class="mt-auto p-6 border-t border-slate-200 dark:border-slate-800">
+                <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl p-4 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800">
+                    <p class="text-[10px] text-slate-400 mb-1 uppercase font-bold tracking-widest text-center lg:text-left">Status da Estufa</p>
+                    <div class="flex items-center justify-center lg:justify-start gap-3">
                         <div class="relative">
                             <div class="w-2.5 h-2.5 bg-brand-500 rounded-full"></div>
                             <div class="absolute inset-0 w-2.5 h-2.5 bg-brand-500 rounded-full animate-ping"></div>
@@ -133,566 +131,398 @@
         </aside>
 
         <!-- CONTEÚDO PRINCIPAL -->
-        <main class="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar relative">
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             
-            <!-- HEADER -->
-            <header class="sticky top-0 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-lg z-30 border-b border-slate-200 dark:border-dark-border px-4 py-4 flex items-center justify-between">
+            <!-- HEADER - Neutro -->
+            <header class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-lg z-30 border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 py-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
                     <button class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500" onclick="toggleSidebar()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
                     </button>
-                    <h1 id="view-title" class="text-base sm:text-lg font-black tracking-tight uppercase">Painel de Controle</h1>
+                    <h1 id="view-title" class="text-base lg:text-lg font-black tracking-tight uppercase truncate text-slate-900 dark:text-white">Monitoramento 3D</h1>
                 </div>
 
-                <div class="flex items-center gap-2 sm:gap-4">
-                    <div class="hidden sm:block text-right">
-                        <p id="current-date" class="text-[10px] text-slate-500 uppercase font-bold">--</p>
-                        <p id="current-time" class="text-base font-mono font-bold leading-none">--</p>
+                <div class="flex items-center gap-3 lg:gap-4">
+                    <div class="hidden xs:block text-right">
+                        <p id="current-date" class="text-[9px] text-slate-400 uppercase font-bold tracking-widest leading-none mb-1">--</p>
+                        <p id="current-time" class="text-sm lg:text-base font-mono font-bold leading-none dark:text-white">--:--:--</p>
                     </div>
-                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95">
+                    <button onclick="toggleDarkMode()" class="p-2 lg:p-2.5 rounded-xl lg:rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 border border-transparent dark:border-slate-700">
                         <svg id="sun-icon" class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                         <svg id="moon-icon" class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    </button>
-                    <button class="relative p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                        <span id="alert-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-dark-bg rounded-full hidden"></span>
                     </button>
                 </div>
             </header>
 
-            <!-- CONTEÚDO DINÂMICO -->
-            <div id="view-container" class="p-4 sm:p-6 pb-24">
+            <!-- VIEW CONTAINER - Fundo escuro neutro -->
+            <div id="view-container" class="flex-1 overflow-y-auto custom-scrollbar p-3 lg:p-6 pb-24 space-y-4 lg:space-y-8 bg-slate-50 dark:bg-dark-bg">
                 
-                <!-- VISTA: DASHBOARD -->
-                <div id="view-dashboard" class="space-y-6 sm:space-y-8 view-transition">
-                    <!-- KPI HIGHLIGHTS -->
-                    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-left">
-                        <div class="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-[2rem] border border-slate-200 dark:border-dark-border shadow-sm">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="p-3 bg-brand-500/10 rounded-2xl text-brand-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                                </div>
-                                <span class="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase">+12% ciclo</span>
+                <!-- DASHBOARD VIEW -->
+                <div id="view-dashboard" class="space-y-4 lg:space-y-8 view-transition">
+                    
+                    <!-- ESTRUTURA 3D INTERATIVA -->
+                    <section class="bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative">
+                        <div class="p-5 lg:p-8 pb-3 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-base lg:text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Gêmeo Digital 3D</h2>
+                                <p class="text-[10px] lg:text-xs text-slate-400 font-medium">Renderização em tempo real</p>
                             </div>
-                            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">Produtividade</h3>
-                            <p class="text-2xl sm:text-3xl font-black mt-1" id="kpi-yield">4.2 <span class="text-sm font-medium text-slate-400">kg/m²</span></p>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                                <span class="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-brand-500">Live Sync</span>
+                            </div>
                         </div>
 
-                        <div class="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-[2rem] border border-slate-200 dark:border-dark-border shadow-sm">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                        <!-- Container do Canvas 3D -->
+                        <div class="relative w-full h-[400px] sm:h-[500px] lg:h-auto lg:aspect-[16/7] overflow-hidden group">
+                            <div id="three-container" class="w-full h-full"></div>
+                            
+                            <!-- Overlay de Comandos -->
+                            <div class="absolute inset-0 p-4 lg:p-6 flex flex-col justify-between pointer-events-none">
+                                <div class="flex justify-start">
+                                    <div class="glass-effect px-3 py-1.5 rounded-lg text-white pointer-events-auto text-[10px] font-bold uppercase tracking-wider">
+                                        Setor Alfa-01
+                                    </div>
                                 </div>
-                                <span class="text-[10px] font-black text-blue-500 bg-blue-500/10 px-2 py-1 rounded-lg uppercase">98% efici.</span>
-                            </div>
-                            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">Consumo de Água</h3>
-                            <p class="text-2xl sm:text-3xl font-black mt-1" id="kpi-water">12 <span class="text-sm font-medium text-slate-400">L/kg</span></p>
-                        </div>
 
-                        <div class="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-[2rem] border border-slate-200 dark:border-dark-border shadow-sm">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="p-3 bg-amber-500/10 rounded-2xl text-amber-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                <div class="flex flex-col sm:flex-row justify-between items-end gap-4 pointer-events-none">
+                                    <div class="glass-effect p-3 lg:p-4 rounded-xl lg:rounded-2xl text-white pointer-events-auto hidden xs:block">
+                                        <div class="flex gap-4">
+                                            <div class="text-center">
+                                                <p class="text-[8px] uppercase opacity-60 mb-0.5">Estrutura</p>
+                                                <p class="text-[10px] lg:text-xs font-bold text-brand-500">Nominal</p>
+                                            </div>
+                                            <div class="text-center border-l border-white/20 pl-4">
+                                                <p class="text-[8px] uppercase opacity-60 mb-0.5">Vidros</p>
+                                                <p class="text-[10px] lg:text-xs font-bold text-blue-400">Limpos</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button onclick="scrollToMetrics()" class="pointer-events-auto w-full sm:w-auto bg-white text-slate-950 font-black px-6 lg:px-8 py-3.5 lg:py-4 rounded-xl lg:rounded-2xl hover:bg-brand-500 transition-all transform active:scale-95 shadow-2xl uppercase text-[10px] lg:text-xs tracking-tighter">
+                                        Ver Métricas da Estufa
+                                    </button>
                                 </div>
-                                <span class="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg uppercase">R$ 0.12/kg</span>
                             </div>
-                            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">Energia</h3>
-                            <p class="text-2xl sm:text-3xl font-black mt-1" id="kpi-energy">450 <span class="text-sm font-medium text-slate-400 uppercase">kWh</span></p>
-                        </div>
-
-                        <div class="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-[2rem] border border-slate-200 dark:border-dark-border shadow-sm">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="p-3 bg-purple-500/10 rounded-2xl text-purple-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                </div>
-                                <span class="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase">Lucro +18%</span>
-                            </div>
-                            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">ROI Estimado</h3>
-                            <p class="text-2xl sm:text-3xl font-black mt-1" id="kpi-roi">2.4 <span class="text-sm font-medium text-slate-400">anos</span></p>
                         </div>
                     </section>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- Monitoramento de Clima Resumido -->
-                        <div class="lg:col-span-8 bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 sm:p-8 shadow-sm overflow-hidden flex flex-col text-left">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                                <div>
-                                    <h2 class="text-xl font-black uppercase tracking-tighter">Monitoramento de Clima</h2>
-                                    <p class="text-xs text-slate-400 font-medium">Sensores multiponto em tempo real</p>
-                                </div>
-                                <div id="vpd-status-dash" class="self-start sm:self-center px-4 py-1.5 bg-brand-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest">VPD IDEAL</div>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-10">
-                                <div class="space-y-1">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Temp.</p>
-                                    <div class="flex items-baseline gap-1">
-                                        <span id="val-temp" class="text-2xl font-black">24.5</span>
-                                        <span class="text-slate-400 text-sm">°C</span>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Umid.</p>
-                                    <div class="flex items-baseline gap-1">
-                                        <span id="val-humidity" class="text-2xl font-black">65</span>
-                                        <span class="text-slate-400 text-sm">%</span>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">CO₂</p>
-                                    <div class="flex items-baseline gap-1">
-                                        <span id="val-co2" class="text-2xl font-black">850</span>
-                                        <span class="text-slate-400 text-xs">ppm</span>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">VPD</p>
-                                    <div class="flex items-baseline gap-1">
-                                        <span id="val-vpd" class="text-2xl font-black text-brand-500">1.2</span>
-                                        <span class="text-slate-400 text-xs">kPa</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-h-[250px] sm:min-h-[300px]">
-                                <canvas id="climateChartDash"></canvas>
+                    <!-- KPI HIGHLIGHTS - Neutros com acento verde -->
+                    <section id="metrics-section" class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">Crescimento</h3>
+                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
+                                <p class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">24<span class="text-[10px] font-medium text-slate-400 ml-1">d</span></p>
+                                <span class="text-[8px] lg:text-[10px] text-brand-500 font-bold">+12%</span>
                             </div>
                         </div>
-
-                        <!-- Alertas -->
-                        <div class="lg:col-span-4 bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 sm:p-8 shadow-sm flex flex-col h-full max-h-[500px] text-left">
-                            <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-lg font-black uppercase tracking-tighter">
-                                    Alertas
-                                    <span id="alert-count" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 min-w-5 h-5 flex items-center justify-center rounded-full ml-2">0</span>
-                                </h2>
-                                <button onclick="clearAlerts()" class="text-[10px] text-slate-400 hover:text-slate-600 font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg transition-all">Limpar</button>
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">VPD Atual</h3>
+                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
+                                <p id="kpi-vpd" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">1.2<span class="text-[8px] font-medium text-slate-400 uppercase ml-1">kPa</span></p>
+                                <span class="text-[8px] lg:text-[10px] text-brand-500 font-bold uppercase">OK</span>
                             </div>
-                            <div id="alerts-container" class="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar"></div>
                         </div>
-                    </div>
-
-                    <!-- Resumos Adicionais Dashboard -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm">
-                            <h3 class="text-base font-black mb-6 flex items-center gap-3 uppercase tracking-tight">
-                                <div class="p-2 bg-brand-500/10 rounded-xl text-brand-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
-                                </div>
-                                Nutrição
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-baseline">
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">pH Atual</p>
-                                    <p class="text-2xl font-black text-brand-500" id="val-ph-dash">6.2</p>
-                                </div>
-                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                    <div id="ph-bar-dash" class="bg-brand-500 h-full w-[62%] transition-all duration-1000"></div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-3 mt-4">
-                                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl text-center border border-slate-100 dark:border-slate-800/50">
-                                        <p class="text-[9px] text-slate-400 font-black uppercase tracking-tighter">EC (mS)</p>
-                                        <p class="text-lg font-black" id="val-ec-dash">1.8</p>
-                                    </div>
-                                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl text-center border border-slate-100 dark:border-slate-800/50">
-                                        <p class="text-[9px] text-slate-400 font-black uppercase tracking-tighter">Temp Sol.</p>
-                                        <p class="text-lg font-black" id="val-sol-temp-dash">21.5°</p>
-                                    </div>
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">pH Solução</h3>
+                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
+                                <p id="kpi-ph" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">6.2</p>
+                                <div class="w-full xs:w-12 lg:w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-1 xs:mt-0">
+                                    <div class="bg-brand-500 h-full w-[62%]"></div>
                                 </div>
                             </div>
                         </div>
+                        <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h3 class="text-slate-500 text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-2 lg:mb-4">Tanque</h3>
+                            <div class="flex flex-col xs:flex-row items-baseline gap-1 lg:gap-2">
+                                <p id="kpi-tank" class="text-xl lg:text-3xl font-black text-slate-900 dark:text-white">88<span class="text-[10px] font-medium text-slate-400 ml-1">%</span></p>
+                                <span class="text-[8px] lg:text-[10px] text-blue-500 font-bold uppercase">Estável</span>
+                            </div>
+                        </div>
+                    </section>
 
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm flex flex-col">
-                            <h3 class="text-base font-black mb-6 flex items-center gap-3 uppercase tracking-tight">
-                                <div class="p-2 bg-blue-500/10 rounded-xl text-blue-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                                </div>
-                                Hidráulica
-                            </h3>
-                            <div class="grid grid-cols-2 gap-y-4 mb-4">
-                                <div class="text-left">
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Vazão</p>
-                                    <p class="text-xl font-black" id="val-flow-dash">14.5 <span class="text-xs font-normal">Lpm</span></p>
-                                </div>
-                                <div class="text-left">
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Tanque</p>
-                                    <p class="text-xl font-black text-blue-500" id="val-tank-dash">88%</p>
+                    <!-- GRÁFICOS - Cores ajustadas -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+                        <div class="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 p-5 lg:p-8 shadow-sm h-[300px] lg:h-[400px] flex flex-col">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-sm lg:text-lg font-black uppercase tracking-tighter text-slate-900 dark:text-white">Estabilidade (24h)</h3>
+                                <div class="flex gap-2">
+                                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-brand-500"></div><span class="text-[8px] font-bold uppercase text-slate-400">T</span></div>
+                                    <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-blue-500"></div><span class="text-[8px] font-bold uppercase text-slate-400">U</span></div>
                                 </div>
                             </div>
-                            <div class="mt-auto h-20">
-                                <canvas id="flowChartDash"></canvas>
+                            <div class="flex-1 min-h-0">
+                                <canvas id="mainDashChart"></canvas>
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm sm:col-span-2 lg:col-span-1">
-                            <h3 class="text-base font-black mb-6 flex items-center gap-3 uppercase tracking-tight">
-                                <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 12 12 13 9"/></svg>
-                                </div>
-                                Biometria
-                            </h3>
-                            <div class="space-y-5 text-left">
-                                <div class="flex justify-between items-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                                    <div>
-                                        <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Crescimento</p>
-                                        <p class="text-lg font-black">Ciclo: 24d</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Altura Est.</p>
-                                        <p class="text-lg font-black text-brand-600" id="bio-height-dash">32 cm</p>
-                                    </div>
-                                </div>
-                                <div class="p-4 border border-slate-100 dark:border-slate-800 rounded-2xl flex justify-between items-center bg-brand-500/[0.03]">
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Índice NDVI</p>
-                                    <p class="text-2xl font-black text-emerald-500" id="bio-ndvi-dash">0.82</p>
-                                </div>
-                            </div>
+                        <div class="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 p-5 lg:p-8 shadow-sm flex flex-col max-h-[400px]">
+                            <h3 class="text-sm lg:text-lg font-black uppercase tracking-tighter mb-4 lg:mb-6 text-slate-900 dark:text-white">Alertas</h3>
+                            <div id="alerts-container" class="space-y-3 lg:space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- OUTRAS VISTAS (Clima, Nutrientes, Biometria, Hidráulica) -->
-                <!-- [Código das outras vistas permanece estruturado similarmente, com grids sm:grid-cols-2 e lg:grid-cols-3] -->
-                
-                <!-- VISTA: CLIMA E AMBIENTE -->
-                <div id="view-clima" class="hidden space-y-8 view-transition">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm">
-                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2 uppercase tracking-tighter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                                Iluminação
-                            </h3>
-                            <div class="space-y-6">
-                                <div class="flex justify-between">
-                                    <div>
-                                        <p class="text-xs text-slate-400 font-black uppercase">PAR (PPFD)</p>
-                                        <p class="text-3xl font-black mt-1" id="val-clima-par">850</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-xs text-slate-400 font-black uppercase">DLI Atual</p>
-                                        <p class="text-3xl font-black mt-1 text-amber-500" id="val-clima-dli">32.4</p>
-                                    </div>
-                                </div>
-                                <div class="h-32"><canvas id="lightChartClima"></canvas></div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm">
-                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2 uppercase tracking-tighter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M12 12a3 3 0 1 0 3 3 3 3 0 0 0-3-3Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-                                Atmosfera & CO₂
-                            </h3>
-                            <div class="space-y-6">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Injeção CO₂</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <div class="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></div>
-                                            <span class="text-sm font-black uppercase">ON</span>
-                                        </div>
-                                    </div>
-                                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">PPM Atual</p>
-                                        <p class="text-sm font-black mt-1" id="val-clima-co2">920</p>
-                                    </div>
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-[10px] font-bold uppercase"><span>Exaustão</span><span class="text-brand-500">65%</span></div>
-                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden"><div class="bg-brand-500 h-full w-[65%]"></div></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 shadow-sm flex flex-col sm:col-span-2 lg:col-span-1">
-                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2 uppercase tracking-tighter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
-                                Estabilidade VPD
-                            </h3>
-                            <div class="flex-1 flex flex-col justify-center items-center py-4">
-                                <div id="vpd-gauge" class="relative w-40 h-40 rounded-full border-[10px] border-slate-100 dark:border-slate-800 flex items-center justify-center transition-all duration-500">
-                                    <div class="text-center">
-                                        <p class="text-3xl font-black text-brand-500" id="val-clima-vpd">1.25</p>
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">kPa</p>
-                                    </div>
-                                    <div id="vpd-marker" class="absolute inset-0 rotate-[45deg] transition-transform duration-700">
-                                        <div class="w-3 h-3 bg-brand-500 rounded-full mx-auto -mt-1.5 shadow-lg shadow-brand-500/50 border-2 border-white dark:border-dark-bg"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-dark-card rounded-[2.5rem] border border-slate-200 dark:border-dark-border p-6 sm:p-10 shadow-sm text-left">
-                        <h2 class="text-xl font-black uppercase tracking-tighter mb-8">Histórico Climático 24h</h2>
-                        <div class="h-[350px] sm:h-[450px]">
-                            <canvas id="climateMainChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Outras telas ocultas seguem a mesma lógica responsiva... (omitindo para brevidade, mas o JS lida com a visibilidade) -->
-                <div id="view-nutrientes" class="hidden space-y-8 view-transition">
-                     <div class="text-center py-20 opacity-50"><p class="text-xl font-black uppercase tracking-widest">Página em Otimização Mobile</p></div>
-                </div>
-                <div id="view-biometria" class="hidden space-y-8 view-transition">
-                     <div class="text-center py-20 opacity-50"><p class="text-xl font-black uppercase tracking-widest">Página em Otimização Mobile</p></div>
-                </div>
-                <div id="view-hidraulica" class="hidden space-y-8 view-transition">
-                     <div class="text-center py-20 opacity-50"><p class="text-xl font-black uppercase tracking-widest">Página em Otimização Mobile</p></div>
-                </div>
+                <!-- OUTRAS VIEWS -->
+                <div id="view-clima" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Clima</p></div>
+                <div id="view-nutrientes" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Nutrientes</p></div>
+                <div id="view-biometria" class="hidden py-20 text-center opacity-50"><p class="text-xl lg:text-2xl font-black uppercase tracking-[0.2em] dark:text-white">Painel de Biometria</p></div>
 
             </div>
 
-            <footer class="fixed bottom-0 left-0 lg:left-72 right-0 p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-t border-slate-200 dark:border-dark-border text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] z-20">
-                &copy; 2026 OASSIS - Greenhouse Systems
+            <footer class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 py-3 text-center shrink-0">
+                <p class="text-[8px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">&copy; 2026 OASIS - Greenhouse Intelligence</p>
             </footer>
         </main>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO GLOBAL ---
-        const GREENHOUSE_DATA = {
-            climate: { temp: 24.5, humidity: 64, co2: 850, vpd: 1.25, par: 780, dli: 32.1 },
-            nutrients: { ph: 6.2, ec: 1.85, temp: 21.5, reservoir: 88 },
-            biometrics: { height: 32.4, ndvi: 0.82 },
-            hydraulic: { flow: 14.8, pressure: 3.1, tank: 88 },
-            history: { timeLabels: [], tempData: [], humData: [], parData: [], flowData: [] },
-            alerts: []
-        };
-
-        let currentView = 'dashboard';
+        // --- 1. LÓGICA DO DASHBOARD ---
+        const DATA = { temp: 24.5, vpd: 1.25, ph: 6.2 };
         let charts = {};
 
-        // --- INICIALIZAÇÃO ---
-        window.onload = () => {
-            initApp();
-            startTimeUpdates();
-            setupAllCharts();
-            startDataSimulation();
-            loadAlerts();
-            updateUI();
-        };
-
-        function initApp() {
-            if (localStorage.getItem('darkMode') === 'false') {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-            location.reload(); 
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            sidebar.classList.toggle('open');
-            backdrop.classList.toggle('hidden');
-            backdrop.classList.toggle('active');
-        }
-
-        function startTimeUpdates() {
+        function initTime() {
             const update = () => {
                 const now = new Date();
                 document.getElementById('current-time').textContent = now.toLocaleTimeString('pt-BR');
-                document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
             };
             setInterval(update, 1000);
             update();
         }
 
-        function navigateTo(viewId) {
-            const titles = { 
-                'dashboard': 'Painel de Controle', 
-                'clima': 'Clima & Ambiente', 
-                'nutrientes': 'Solução Nutritiva', 
-                'biometria': 'Análise Biométrica',
-                'hidraulica': 'Hidráulica & Fluxo'
-            };
-            document.getElementById('view-title').textContent = titles[viewId];
-
-            const views = ['dashboard', 'clima', 'nutrientes', 'biometria', 'hidraulica'];
-            views.forEach(id => {
-                const el = document.getElementById(`view-${id}`);
-                const nav = document.getElementById(`nav-${id}`);
-                if (id === viewId) {
-                    el.classList.remove('hidden');
-                    nav.classList.add('bg-brand-500/10', 'text-brand-600', 'dark:text-brand-500', 'font-bold');
-                    nav.classList.remove('text-slate-500', 'font-medium');
-                } else {
-                    el.classList.add('hidden');
-                    nav.classList.remove('bg-brand-500/10', 'text-brand-600', 'dark:text-brand-500', 'font-bold');
-                    nav.classList.add('text-slate-500', 'font-medium');
-                }
-            });
-
-            currentView = viewId;
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const isOpen = sidebar.classList.contains('translate-x-0');
             
-            // Fechar sidebar no mobile após navegar
-            if (window.innerWidth < 1024) {
-                const sidebar = document.getElementById('sidebar');
-                const backdrop = document.getElementById('sidebar-backdrop');
-                sidebar.classList.remove('open');
+            if (isOpen) {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
                 backdrop.classList.add('hidden');
-                backdrop.classList.remove('active');
+            } else {
+                sidebar.classList.add('translate-x-0');
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
             }
-
-            setTimeout(() => {
-                Object.values(charts).forEach(c => { if(c) c.resize(); });
-            }, 50);
         }
 
-        // --- GRÁFICOS ---
-        function setupAllCharts() {
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            initCharts();
+        }
+
+        function navigateTo(id) {
+            const views = ['dashboard', 'clima', 'nutrientes', 'biometria'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${v}`);
+                btn.classList.remove('bg-brand-500/10', 'text-brand-500', 'font-bold');
+                btn.classList.add('text-slate-500');
+            });
+            document.getElementById(`view-${id}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${id}`);
+            activeBtn.classList.add('bg-brand-500/10', 'text-brand-500', 'font-bold');
+            activeBtn.classList.remove('text-slate-500');
+            document.getElementById('view-title').textContent = id === 'dashboard' ? 'Monitoramento 3D' : id.charAt(0).toUpperCase() + id.slice(1);
+            
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+
+        function scrollToMetrics() {
+            document.getElementById('metrics-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function initCharts() {
+            const ctx = document.getElementById('mainDashChart').getContext('2d');
             const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#94a3b8' : '#64748b';
             const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
 
-            for(let i = 0; i < 12; i++) {
-                const time = new Date();
-                time.setMinutes(time.getMinutes() - (11 - i) * 15);
-                GREENHOUSE_DATA.history.timeLabels.push(time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                GREENHOUSE_DATA.history.tempData.push(22 + Math.random() * 4);
-                GREENHOUSE_DATA.history.humData.push(60 + Math.random() * 10);
-                GREENHOUSE_DATA.history.parData.push(700 + Math.random() * 200);
-                GREENHOUSE_DATA.history.flowData.push(14 + Math.random() * 2);
-            }
+            if (charts.main) charts.main.destroy();
 
-            charts.dash = new Chart(document.getElementById('climateChartDash'), {
+            charts.main = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: GREENHOUSE_DATA.history.timeLabels,
+                    labels: Array.from({length: 12}, (_, i) => `${i*2}h`),
                     datasets: [
-                        { label: 'Temperatura', data: GREENHOUSE_DATA.history.tempData, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.4, borderWidth: 3 },
-                        { label: 'Umidade', data: GREENHOUSE_DATA.history.humData, borderColor: '#3b82f6', borderDash: [5,5], tension: 0.4, borderWidth: 2 }
+                        { label: 'Temp', data: [22, 21, 20, 22, 24, 25, 26, 25, 24, 23, 22, 22], borderColor: '#7CFC00', tension: 0.4, fill: true, backgroundColor: 'rgba(124, 252, 0, 0.05)', pointRadius: 0, borderWidth: 2 },
+                        { label: 'Umid', data: [65, 66, 68, 65, 60, 58, 55, 58, 62, 65, 66, 65], borderColor: '#3b82f6', borderDash: [5, 5], tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } } } }
-            });
-
-            charts.flowDash = new Chart(document.getElementById('flowChartDash'), {
-                type: 'line',
-                data: { labels: GREENHOUSE_DATA.history.timeLabels.slice(-6), datasets: [{ data: GREENHOUSE_DATA.history.flowData.slice(-6), borderColor: '#3b82f6', fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.5, pointRadius: 0, borderWidth: 2 }] },
-                options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-            });
-
-            charts.light = new Chart(document.getElementById('lightChartClima'), {
-                type: 'bar',
-                data: { labels: GREENHOUSE_DATA.history.timeLabels.slice(-8), datasets: [{ label: 'PAR', data: GREENHOUSE_DATA.history.parData.slice(-8), backgroundColor: '#fbbf24', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-            });
-
-            charts.climaMain = new Chart(document.getElementById('climateMainChart'), {
-                type: 'line',
-                data: { labels: GREENHOUSE_DATA.history.timeLabels, datasets: [{ label: 'Temperatura', data: GREENHOUSE_DATA.history.tempData, borderColor: '#22c55e', borderWidth: 4, tension: 0.3, pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { display: true, grid: { display: false }, ticks: { color: textColor, font: { size: 9, weight: 'bold' } } },
+                        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 } } } 
+                    } 
+                }
             });
         }
 
-        // --- SIMULAÇÃO ---
-        function startDataSimulation() {
-            setInterval(() => {
-                const c = GREENHOUSE_DATA.climate;
-                c.temp += (Math.random() - 0.5) * 0.3;
-                c.humidity += (Math.random() - 0.5) * 0.5;
-                c.par = 750 + (Math.random() * 150);
-                c.vpd = (1.1 + Math.random() * 0.4).toFixed(2);
+        // --- 2. LÓGICA THREE.JS ---
+        let scene, camera, renderer, worldGroup;
+        let isDragging = false;
+        let previousMouseX = 0, previousMouseY = 0;
 
-                const n = GREENHOUSE_DATA.nutrients;
-                n.ph += (Math.random() - 0.5) * 0.05;
+        function init3D() {
+            const container = document.getElementById('three-container');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
 
-                const h = GREENHOUSE_DATA.hydraulic;
-                h.flow = (14 + Math.random() * 2).toFixed(1);
-
-                updateHistoryData();
-                checkAlertRules();
-                updateUI();
-            }, 4000);
-        }
-
-        function updateHistoryData() {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            GREENHOUSE_DATA.history.timeLabels.push(time);
-            GREENHOUSE_DATA.history.tempData.push(GREENHOUSE_DATA.climate.temp);
-            GREENHOUSE_DATA.history.flowData.push(parseFloat(GREENHOUSE_DATA.hydraulic.flow));
-
-            if (GREENHOUSE_DATA.history.timeLabels.length > 15) {
-                GREENHOUSE_DATA.history.timeLabels.shift();
-                GREENHOUSE_DATA.history.tempData.shift();
-                GREENHOUSE_DATA.history.flowData.shift();
-            }
-
-            if (charts.dash) charts.dash.update('none');
-            if (charts.flowDash) charts.flowDash.update('none');
-            if (currentView === 'clima' && charts.climaMain) charts.climaMain.update('none');
-        }
-
-        function createAlert(message, level, color) {
-            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (GREENHOUSE_DATA.alerts.length > 0 && GREENHOUSE_DATA.alerts[0].message === message) return;
-            GREENHOUSE_DATA.alerts.unshift({ id: Date.now(), message, level, color, timestamp });
-            if (GREENHOUSE_DATA.alerts.length > 5) GREENHOUSE_DATA.alerts.pop();
-            renderAlerts();
-        }
-
-        function renderAlerts() {
-            const container = document.getElementById('alerts-container');
-            const badge = document.getElementById('alert-badge');
-            const countEl = document.getElementById('alert-count');
-            if (GREENHOUSE_DATA.alerts.length > 0) badge.classList.remove('hidden');
-            else badge.classList.add('hidden');
-            if (countEl) countEl.textContent = GREENHOUSE_DATA.alerts.length;
-            container.innerHTML = GREENHOUSE_DATA.alerts.map(a => `
-                <div class="p-4 rounded-2xl bg-${a.color}-500/10 border border-${a.color}-500/20 flex gap-3 text-left animate-in slide-in-from-right-4 duration-300">
-                    <div class="w-1.5 h-1.5 rounded-full bg-${a.color}-500 mt-2 shrink-0"></div>
-                    <div>
-                        <p class="text-[9px] font-black text-${a.color}-500 uppercase tracking-tighter">${a.level} • ${a.timestamp}</p>
-                        <p class="text-xs font-bold leading-tight">${a.message}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function clearAlerts() { GREENHOUSE_DATA.alerts = []; renderAlerts(); }
-        function loadAlerts() { renderAlerts(); }
-        function checkAlertRules() {
-            if (GREENHOUSE_DATA.climate.temp > 27.5) createAlert('Temperatura Crítica (Setor A)', 'CRÍTICO', 'rose');
-            if (GREENHOUSE_DATA.nutrients.ph < 5.8 || GREENHOUSE_DATA.nutrients.ph > 6.5) createAlert('pH fora da faixa ideal', 'MÉDIO', 'amber');
-        }
-
-        function updateUI() {
-            const c = GREENHOUSE_DATA.climate;
-            const n = GREENHOUSE_DATA.nutrients;
-            const b = GREENHOUSE_DATA.biometrics;
-            const h = GREENHOUSE_DATA.hydraulic;
+            scene = new THREE.Scene();
             
-            // Dashboard IDs
-            const tempEl = document.getElementById('val-temp');
-            if (tempEl) {
-                tempEl.textContent = c.temp.toFixed(1);
-                document.getElementById('val-humidity').textContent = c.humidity.toFixed(0);
-                document.getElementById('val-co2').textContent = c.co2.toFixed(0);
-                document.getElementById('val-vpd').textContent = c.vpd;
-                document.getElementById('val-ph-dash').textContent = n.ph.toFixed(1);
-                document.getElementById('ph-bar-dash').style.width = (n.ph / 10 * 100) + '%';
-                document.getElementById('val-ec-dash').textContent = n.ec.toFixed(1);
-                document.getElementById('val-sol-temp-dash').textContent = n.temp.toFixed(0) + '°';
-                document.getElementById('val-flow-dash').textContent = h.flow;
-                document.getElementById('val-tank-dash').textContent = h.tank + '%';
-                document.getElementById('bio-height-dash').textContent = b.height.toFixed(0) + ' cm';
-                document.getElementById('bio-ndvi-dash').textContent = b.ndvi;
-            }
+            const fov = window.innerWidth < 640 ? 55 : 45;
+            camera = new THREE.PerspectiveCamera(fov, w / h, 0.1, 1000);
+            camera.position.set(10, 8, 14);
+            camera.lookAt(0, 1.5, 0);
 
-            // Clima View
-            if (currentView === 'clima') {
-                document.getElementById('val-clima-par').textContent = c.par.toFixed(0);
-                document.getElementById('val-clima-co2').textContent = c.co2.toFixed(0);
-                document.getElementById('val-clima-vpd').textContent = c.vpd;
-                const vpdVal = parseFloat(c.vpd);
-                document.getElementById('vpd-marker').style.transform = `rotate(${(vpdVal - 0.8) * 90}deg)`;
-                document.getElementById('vpd-gauge').style.borderColor = vpdVal > 1.5 ? '#f43f5e' : '#22c55e';
-            }
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            sunLight.position.set(10, 20, 10);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+
+            worldGroup = new THREE.Group();
+            scene.add(worldGroup);
+
+            // Chão neutro (cinza asfalto suave) para reduzir o excesso de verde
+            const groundGeo = new THREE.PlaneGeometry(100, 100);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.01;
+            ground.receiveShadow = true;
+            worldGroup.add(ground);
+
+            // Grelha discreta
+            const grid = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
+            worldGroup.add(grid);
+
+            create3DGreenhouse();
+
+            // Interação
+            const onStart = (x, y) => { isDragging = true; previousMouseX = x; previousMouseY = y; };
+            const onEnd = () => { isDragging = false; };
+            const onMove = (x, y) => {
+                if (isDragging) {
+                    const deltaX = x - previousMouseX;
+                    const deltaY = y - previousMouseY;
+                    worldGroup.rotation.y += deltaX * 0.005;
+                    worldGroup.rotation.x += deltaY * 0.005;
+                    worldGroup.rotation.x = Math.max(-Math.PI/6, Math.min(Math.PI/3, worldGroup.rotation.x));
+                    previousMouseX = x;
+                    previousMouseY = y;
+                }
+            };
+
+            container.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
+            window.addEventListener('mouseup', onEnd);
+            container.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+            container.addEventListener('touchstart', (e) => {
+                if(e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
+            }, {passive: true});
+            container.addEventListener('touchend', onEnd);
+            container.addEventListener('touchmove', (e) => {
+                if(e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+            }, {passive: true});
+
+            window.addEventListener('resize', () => {
+                const nw = container.clientWidth;
+                const nh = container.clientHeight;
+                camera.aspect = nw / nh;
+                camera.fov = window.innerWidth < 640 ? 55 : 45;
+                camera.updateProjectionMatrix();
+                renderer.setSize(nw, nh);
+            });
         }
+
+        function create3DGreenhouse() {
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0xE3CBA8, roughness: 0.8 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.2, metalness: 0.5, roughness: 0.1, side: THREE.DoubleSide });
+            
+            const w = 4, l = 6, h = 3, rh = 1.2, t = 0.12;
+            const greenhouse = new THREE.Group();
+
+            const addBeam = (width, height, depth, x, y, z, rx=0, ry=0, rz=0) => {
+                const geo = new THREE.BoxGeometry(width, height, depth);
+                const mesh = new THREE.Mesh(geo, woodMat);
+                mesh.position.set(x, y, z);
+                mesh.rotation.set(rx, ry, rz);
+                greenhouse.add(mesh);
+            };
+
+            // Pilares e Base
+            addBeam(w, t, t, 0, 0, l/2); addBeam(w, t, t, 0, 0, -l/2);
+            addBeam(t, t, l, w/2, 0, 0); addBeam(t, t, l, -w/2, 0, 0);
+            for(let x of [-w/2, w/2]) { for(let z of [-l/2, 0, l/2]) { addBeam(t, h, t, x, h/2, z); } }
+            addBeam(w, t, t, 0, h, l/2); addBeam(w, t, t, 0, h, -l/2);
+            addBeam(t, t, l, w/2, h, 0); addBeam(t, t, l, -w/2, h, 0);
+
+            // Telhado
+            const roofAngle = Math.atan(rh / (w/2));
+            const roofSide = Math.sqrt(rh*rh + (w/2)*(w/2));
+            for(let z of [-l/2, 0, l/2]) {
+                addBeam(roofSide, t, t, -w/4, h + rh/2, z, 0, 0, roofAngle);
+                addBeam(roofSide, t, t, w/4, h + rh/2, z, 0, 0, -roofAngle);
+            }
+            addBeam(t, t, l, 0, h + rh, 0);
+
+            // Vidros
+            const addGlass = (gw, gh, gd, x, y, z, rx=0, ry=0, rz=0) => {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), glassMat);
+                mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz);
+                greenhouse.add(mesh);
+            };
+            addGlass(w, h, 0.01, 0, h/2, l/2); addGlass(w, h, 0.01, 0, h/2, -l/2);
+            addGlass(0.01, h, l, w/2, h/2, 0); addGlass(0.01, h, l, -w/2, h/2, 0);
+            addGlass(roofSide, 0.01, l, -w/4, h + rh/2, 0, 0, 0, roofAngle);
+            addGlass(roofSide, 0.01, l, w/4, h + rh/2, 0, 0, 0, -roofAngle);
+
+            // Torres de Plantas
+            const plantMat = new THREE.MeshStandardMaterial({ color: 0x4ade80 });
+            for(let z = -l/2 + 1.2; z <= l/2 - 1.2; z += 1.8) {
+                [-w/2 + 1, w/2 - 1].forEach(x => {
+                    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, h*0.7), new THREE.MeshStandardMaterial({color: 0x334155}));
+                    tower.position.set(x, h/2, z); greenhouse.add(tower);
+                    for(let i=0; i<6; i++) {
+                        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), plantMat);
+                        leaf.position.set(x, 0.6 + i*0.4, z); 
+                        greenhouse.add(leaf);
+                    }
+                });
+            }
+            worldGroup.add(greenhouse);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!isDragging) worldGroup.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+
+        window.onload = () => {
+            initTime();
+            initCharts();
+            init3D();
+            animate();
+            setInterval(() => {
+                DATA.vpd = (1.1 + Math.random() * 0.3).toFixed(2);
+                DATA.ph = (6.1 + Math.random() * 0.2).toFixed(1);
+                document.getElementById('kpi-vpd').innerHTML = `${DATA.vpd}<span class="text-[8px] lg:text-sm font-medium text-slate-400 uppercase ml-1">kPa</span>`;
+                document.getElementById('kpi-ph').textContent = DATA.ph;
+            }, 3000);
+        };
     </script>
 </body>
 </html>
