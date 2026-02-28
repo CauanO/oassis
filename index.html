@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="dark">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OASIS</title>
+    <title>OASIS - Monitoramento Inteligente 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -51,8 +51,8 @@
         
         #three-container, #camera-feed-container {
             cursor: grab;
-            background: radial-gradient(circle, #1e293b 0%, #020617 100%);
-            touch-action: none; /* Previne scroll ao girar o modelo */
+            background: #87CEEB; /* Céu azul */
+            touch-action: none;
         }
         #three-container:active, #camera-feed-container:active { cursor: grabbing; }
 
@@ -70,10 +70,10 @@
         .rec-dot { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* Estilos do Joystick PTZ */
+        /* Joystick PTZ Corrigido */
         .joystick-base {
-            width: 120px;
-            height: 120px;
+            width: 110px;
+            height: 110px;
             background: rgba(255, 255, 255, 0.03);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
@@ -84,8 +84,8 @@
             justify-content: center;
         }
         .joystick-handle {
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             background: #7CFC00;
             border-radius: 50%;
             position: absolute;
@@ -130,7 +130,7 @@
                         Solução Nutritiva
                     </button>
                     <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 12 12 13 9"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 2 12 13 9"/></svg>
                         Análise Biométrica
                     </button>
                 </nav>
@@ -147,7 +147,7 @@
             </div>
         </aside>
 
-        <!-- CONTEÚDO PRINCIPAL -->
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             <header class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-lg z-30 border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 py-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
@@ -169,12 +169,11 @@
                 </div>
             </header>
 
-            <!-- CONTENT AREA -->
             <div id="view-container" class="flex-1 overflow-y-auto custom-scrollbar p-3 lg:p-6 pb-24 space-y-6 bg-slate-50 dark:bg-dark-bg">
                 
                 <!-- DASHBOARD VIEW -->
                 <div id="view-dashboard" class="space-y-6 view-transition">
-                    <!-- Gêmeo Digital -->
+                    <!-- Gêmeo Digital (Natureza) -->
                     <section class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative">
                         <div class="p-5 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800">
                             <h2 class="text-sm lg:text-base font-black uppercase tracking-tighter dark:text-white">Gêmeo Digital 3D</h2>
@@ -197,7 +196,7 @@
                             <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">pH Médio</p>
                             <p id="kpi-ph" class="text-2xl font-black tracking-tighter">6.2</p>
                         </div>
-                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center text-slate-900 dark:text-white">
                             <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">Nível Tanque</p>
                             <p id="kpi-tank" class="text-2xl font-black text-brand-500 tracking-tighter font-mono">88%</p>
                         </div>
@@ -218,33 +217,32 @@
                     </section>
                 </div>
 
-                <!-- MONITORAMENTO (Câmara e Joystick) -->
+                <!-- MONITORAMENTO (Câmara Interna Compacta e Joystick) -->
                 <div id="view-clima" class="hidden space-y-6 view-transition">
-                    <div class="max-w-2xl mx-auto flex flex-col items-center">
+                    <div class="max-w-xl mx-auto flex flex-col items-center">
                         <section class="w-full bg-black rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden relative aspect-video">
                             <!-- CCTV UI -->
                             <div class="absolute inset-0 pointer-events-none z-10 p-5">
                                 <div class="scanline"></div>
                                 <div class="flex justify-between items-start">
-                                    <div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
+                                    <div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
                                         <div class="w-2 h-2 bg-red-600 rounded-full rec-dot shadow-[0_0_10px_#dc2626]"></div>
-                                        <span class="text-white text-[8px] font-mono font-bold tracking-widest uppercase leading-none">REC • CAM_01</span>
+                                        <span class="text-white text-[8px] font-mono font-bold tracking-widest uppercase">REC • CAM_INT_01</span>
                                     </div>
-                                    <div class="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md font-mono text-white text-[9px] leading-none">
+                                    <div class="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md font-mono text-white text-[9px] border border-white/10">
                                         <p id="cctv-time">--:--:--</p>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Feed 3D Interno -->
+                            <!-- Feed 3D da Câmara -->
                             <div id="camera-feed-container" class="w-full h-full"></div>
                         </section>
 
-                        <!-- Joystick Control -->
+                        <!-- PTZ Joystick Corrigido -->
                         <div class="mt-12 flex flex-col items-center gap-6">
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-4 text-slate-900 dark:text-white">
                                 <div class="h-px w-8 bg-slate-800"></div>
-                                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Controlo Pan/Tilt</span>
+                                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Controlo PTZ</span>
                                 <div class="h-px w-8 bg-slate-800"></div>
                             </div>
                             
@@ -252,35 +250,35 @@
                                 <div class="joystick-handle" id="joystick-knob"></div>
                             </div>
                             
-                            <p class="text-[9px] text-slate-600 font-medium uppercase tracking-widest">Arraste para mover a câmara</p>
+                            <p class="text-[9px] text-slate-600 font-medium uppercase tracking-widest">Arraste para mover a câmara interna</p>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-nutrientes" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase">Solução Nutritiva</div>
-                <div id="view-biometria" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase">Análise Biométrica</div>
+                <div id="view-nutrientes" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase text-slate-900 dark:text-white">Painel de Nutrientes</div>
+                <div id="view-biometria" class="hidden py-10 text-center opacity-30 font-black tracking-widest text-sm uppercase text-slate-900 dark:text-white">Análise Biométrica</div>
 
             </div>
 
             <footer class="bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 py-3 text-center shrink-0">
-                <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em]">&copy; 2026 OASIS SYSTEMS • PRECISION BOTANY</p>
+                <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.3em]">&copy; 2026 OASIS SYSTEMS • PRECISION BOTANY</p>
             </footer>
         </main>
     </div>
 
     <script>
+        // --- ESTADO GLOBAL ---
         const DATA = { temp: 24.5, vpd: 1.25, ph: 6.2 };
         let joystickActive = false;
         let joystickVec = { x: 0, y: 0 };
-        let camTargetRotation = { y: 0, x: 0 };
+        let camRotation = { y: 0, x: 0 };
         let charts = {};
 
         function initTime() {
             const update = () => {
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour12: false });
-                const ids = ['current-time', 'cctv-time'];
-                ids.forEach(id => {
+                ['current-time', 'cctv-time'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.textContent = timeStr;
                 });
@@ -361,14 +359,14 @@
             });
         }
 
-        // --- THREE.JS ---
+        // --- THREE.JS ENGINE ---
         let mainScene, mainCamera, mainRenderer, mainGroup;
         let camScene, camCamera, camRenderer, camGroup;
         let waterDrops = [];
         let isDragging = false, prevX = 0, prevY = 0;
 
         function init3D() {
-            // Dashboard
+            // Dashboard Render
             const mainCont = document.getElementById('three-container');
             if(mainCont) {
                 mainScene = new THREE.Scene();
@@ -382,50 +380,72 @@
                 mainGroup = new THREE.Group();
                 mainScene.add(mainGroup);
                 setupLighting(mainScene);
+                createEnvironment(mainGroup); 
                 buildGreenhouse(mainGroup, false);
 
-                // Touch support para o Gêmeo Digital
-                const onStart = (e) => { 
-                    isDragging = true; 
-                    const touch = e.touches ? e.touches[0] : e;
-                    prevX = touch.clientX; 
-                    prevY = touch.clientY; 
-                };
+                const onStart = (e) => { isDragging = true; const t = e.touches ? e.touches[0] : e; prevX = t.clientX; prevY = t.clientY; };
                 const onEnd = () => isDragging = false;
                 const onMove = (e) => {
                     if(isDragging) {
-                        const touch = e.touches ? e.touches[0] : e;
-                        mainGroup.rotation.y += (touch.clientX - prevX) * 0.005;
-                        mainGroup.rotation.x = Math.max(-0.6, Math.min(0.6, mainGroup.rotation.x + (touch.clientY - prevY) * 0.005));
-                        prevX = touch.clientX; 
-                        prevY = touch.clientY;
+                        const t = e.touches ? e.touches[0] : e;
+                        mainGroup.rotation.y += (t.clientX - prevX) * 0.005;
+                        mainGroup.rotation.x = Math.max(-0.6, Math.min(0.6, mainGroup.rotation.x + (t.clientY - prevY) * 0.005));
+                        prevX = t.clientX; prevY = t.clientY;
                     }
                 };
-
                 mainCont.addEventListener('mousedown', onStart);
                 window.addEventListener('mouseup', onEnd);
                 mainCont.addEventListener('mousemove', onMove);
-
                 mainCont.addEventListener('touchstart', (e) => { if(e.touches.length === 1) onStart(e); }, { passive: false });
                 window.addEventListener('touchend', onEnd);
                 mainCont.addEventListener('touchmove', (e) => { if(e.touches.length === 1) { e.preventDefault(); onMove(e); } }, { passive: false });
             }
 
-            // CCTV Camera
+            // CCTV Camera Render
             const camCont = document.getElementById('camera-feed-container');
             if(camCont) {
                 camScene = new THREE.Scene();
                 camCamera = new THREE.PerspectiveCamera(55, camCont.clientWidth / camCont.clientHeight, 0.1, 1000);
                 camCamera.position.set(-1.4, 2, 2.3); 
-                camCamera.lookAt(0.5, 1, -0.5);
+                camCamera.rotation.order = 'YXZ';
                 camRenderer = new THREE.WebGLRenderer({ antialias: true });
                 camRenderer.setSize(camCont.clientWidth, camCont.clientHeight);
                 camCont.appendChild(camRenderer.domElement);
                 camGroup = new THREE.Group();
                 camScene.add(camGroup);
                 setupLighting(camScene);
+                createEnvironment(camGroup); 
                 buildGreenhouse(camGroup, true);
                 initJoystick();
+            }
+        }
+
+        function createEnvironment(group) {
+            const floorGeo = new THREE.BoxGeometry(25, 1, 25);
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x7CFC00 });
+            const soilMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f });
+            
+            const floor = new THREE.Mesh(floorGeo, grassMat);
+            floor.position.y = -0.5;
+            group.add(floor);
+
+            const soil = new THREE.Mesh(new THREE.BoxGeometry(25, 2, 25), soilMat);
+            soil.position.y = -2;
+            group.add(soil);
+
+            const treeLeafMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4b3621 });
+
+            for(let i=0; i<20; i++) {
+                const tx = (Math.random() - 0.5) * 20;
+                const tz = (Math.random() - 0.5) * 20;
+                if(Math.abs(tx) < 4 && Math.abs(tz) < 5) continue; 
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 1.5), trunkMat);
+                trunk.position.set(tx, 0.75, tz);
+                group.add(trunk);
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.8, 2, 8), treeLeafMat);
+                leaves.position.set(tx, 2, tz);
+                group.add(leaves);
             }
         }
 
@@ -434,40 +454,45 @@
             const knob = document.getElementById('joystick-knob');
             if(!base || !knob) return;
 
-            const update = (cx, cy) => {
+            const updatePos = (cx, cy) => {
                 const r = base.getBoundingClientRect();
                 const center = { x: r.left + r.width/2, y: r.top + r.height/2 };
                 let dx = cx - center.x;
                 let dy = cy - center.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                const max = 35;
+                const max = 35; // Raio máximo
+                
                 if(dist > max) { dx *= max/dist; dy *= max/dist; }
                 
-                knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                // Aplicar transformação visual corrigida
+                knob.style.left = `calc(50% + ${dx}px)`;
+                knob.style.top = `calc(50% + ${dy}px)`;
+                
                 joystickVec.x = dx/max;
                 joystickVec.y = dy/max;
             };
 
             const onStart = (e) => { 
                 joystickActive = true; 
-                const touch = e.touches ? e.touches[0] : e;
-                update(touch.clientX, touch.clientY); 
+                const t = e.touches ? e.touches[0] : e;
+                updatePos(t.clientX, t.clientY); 
             };
             const onEnd = () => { 
                 joystickActive = false; 
                 joystickVec = {x:0,y:0}; 
-                knob.style.transform = `translate(-50%, -50%)`; 
+                knob.style.left = '50%';
+                knob.style.top = '50%';
             };
             
             base.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', (e) => { if(joystickActive) update(e.clientX, e.clientY); });
+            window.addEventListener('mousemove', (e) => joystickActive && updatePos(e.clientX, e.clientY));
             window.addEventListener('mouseup', onEnd);
             
             base.addEventListener('touchstart', (e) => { e.preventDefault(); onStart(e); }, {passive: false});
             window.addEventListener('touchmove', (e) => { 
                 if(joystickActive) {
                     e.preventDefault();
-                    update(e.touches[0].clientX, e.touches[0].clientY); 
+                    updatePos(e.touches[0].clientX, e.touches[0].clientY); 
                 }
             }, {passive: false});
             window.addEventListener('touchend', onEnd);
@@ -491,7 +516,6 @@
                 group.add(m);
             };
 
-            // Structure
             addB(w, t, t, 0, 0, l/2); addB(w, t, t, 0, 0, -l/2);
             addB(t, t, l, w/2, 0, 0); addB(t, t, l, -w/2, 0, 0);
             for(let x of [-w/2, w/2]) { for(let z of [-l/2, 0, l/2]) { addB(t, h, t, x, h/2, z); } }
@@ -539,12 +563,12 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            if(!isDragging && mainGroup) mainGroup.rotation.y += 0.0015;
+            if(!isDragging && mainGroup) mainGroup.rotation.y += 0.001;
             
             if(camCamera && joystickActive) {
-                camTargetRotation.y -= joystickVec.x * 0.05;
-                camTargetRotation.x = Math.max(-0.8, Math.min(0.8, camTargetRotation.x - joystickVec.y * 0.05));
-                camCamera.rotation.set(camTargetRotation.x, camTargetRotation.y, 0, 'YXZ');
+                camRotation.y -= joystickVec.x * 0.04;
+                camRotation.x = Math.max(-0.8, Math.min(0.8, camRotation.x - joystickVec.y * 0.04));
+                camCamera.rotation.set(camRotation.x, camRotation.y, 0);
             }
 
             waterDrops.forEach(d => { d.position.y -= 0.012; if(d.position.y < 0.2) d.position.y = d.userData.startY + 0.3; });
@@ -568,7 +592,7 @@
             });
             setInterval(() => {
                 const vpd = document.getElementById('kpi-vpd');
-                if(vpd) vpd.innerHTML = `${(1.1 + Math.random() * 0.3).toFixed(2)}<span class="text-[8px] lg:text-sm font-medium text-slate-400 uppercase ml-1">kPa</span>`;
+                if(vpd) vpd.innerHTML = `${(1.1 + Math.random() * 0.3).toFixed(2)}<span class="text-[10px] font-medium text-slate-500 uppercase ml-1">kPa</span>`;
             }, 3000);
         };
     </script>
