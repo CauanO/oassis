@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OASIS - Monitoramento Inteligente 3D</title>
+    <title>OASIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -125,14 +125,6 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                         Câmera ao Vivo
                     </button>
-                    <button onclick="navigateTo('nutrientes')" id="nav-nutrientes" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
-                        Solução Nutritiva
-                    </button>
-                    <button onclick="navigateTo('biometria')" id="nav-biometria" class="nav-link w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all text-sm font-medium text-left font-sans">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C10 14.52 2 12 13 9"/></svg>
-                        Análise Biométrica
-                    </button>
                 </nav>
             </div>
             
@@ -154,7 +146,7 @@
                     <button class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500" onclick="toggleSidebar()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
                     </button>
-                    <h1 id="view-title" class="text-base lg:text-lg font-black tracking-tight uppercase truncate text-slate-900 dark:text-white">Monitoramento 3D</h1>
+                    <h1 id="view-title" class="text-base lg:text-lg font-black tracking-tight uppercase truncate text-slate-900 dark:text-white">Painel de Monitoramento</h1>
                 </div>
 
                 <div class="flex items-center gap-3 lg:gap-4 text-slate-900 dark:text-white font-mono text-xs">
@@ -173,35 +165,122 @@
                 
                 <!-- DASHBOARD VIEW -->
                 <div id="view-dashboard" class="space-y-6 view-transition">
-
                     <!-- Métricas KPIs -->
-                    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white text-center">
-                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">VPD Atual</p>
-                            <p id="kpi-vpd" class="text-2xl font-black tracking-tighter">1.2<span class="text-xs ml-1 text-slate-500">kPa</span></p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white text-center">
-                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">pH Médio</p>
-                            <p id="kpi-ph" class="text-2xl font-black tracking-tighter">6.2</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center text-slate-900 dark:text-white">
-                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">Nível Tanque</p>
-                            <p id="kpi-tank" class="text-2xl font-black text-brand-500 tracking-tighter font-mono">88%</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white text-center">
-                            <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">Ciclo</p>
-                            <p class="text-2xl font-black tracking-tighter">24<span class="text-xs ml-1 text-slate-500 font-sans">d</span></p>
-                        </div>
-                    </section>
+                    <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
+                        <!-- Umidade -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Umidade
+                                </p>
+                            </div>
 
-                    <!-- Gráficos -->
-                    <section class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Estabilidade Ambiental (24h)</h3>
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-umidade" class="text-3xl font-black tracking-tighter">
+                                    65<span class="text-sm text-slate-400 ml-1">%</span>
+                                </p>
+                                <span class="text-xs text-green-500 font-semibold mb-1">↑ 2%</span>
+                            </div>
                         </div>
-                        <div class="h-[250px] w-full">
+
+                        <!-- Temperatura -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Temperatura
+                                </p>
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-temperatura" class="text-3xl font-black tracking-tighter">
+                                    28<span class="text-sm text-slate-400 ml-1">°C</span>
+                                </p>
+                                <span class="text-xs text-red-500 font-semibold mb-1">↑ 1°C</span>
+                            </div>
+                        </div>
+
+                        <!-- Luminosidade -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Luminosidade
+                                </p>
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-luminosidade" class="text-3xl font-black tracking-tighter">
+                                    1200<span class="text-sm text-slate-400 ml-1">lux</span>
+                                </p>
+                                <span class="text-xs text-green-500 font-semibold mb-1">Ideal</span>
+                            </div>
+                        </div>
+
+                        <!-- pH -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    pH
+                                </p>
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-ph" class="text-3xl font-black tracking-tighter">
+                                    6.3
+                                </p>
+                                <span class="text-xs text-green-500 font-semibold mb-1">Estável</span>
+                            </div>
+                        </div>
+
+                        <!-- Nível da Água -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Nível da Água
+                                </p>
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-agua" class="text-3xl font-black text-brand-500 tracking-tighter font-mono">
+                                    82<span class="text-sm text-slate-400 ml-1">%</span>
+                                </p>
+                                <span class="text-xs text-green-500 font-semibold mb-1">Seguro</span>
+                            </div>
+                        </div>
+
+                        <!-- NPK -->
+                        <div class="group bg-white/80 dark:bg-slate-900/80 backdrop-blur p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    NPK
+                                </p>
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <p id="kpi-npk" class="text-3xl font-black tracking-tighter">
+                                    850<span class="text-sm text-slate-400 ml-1">ppm</span>
+                                </p>
+                                <span class="text-xs text-green-500 font-semibold mb-1">Ótimo</span>
+                            </div>
+                        </div>
+
+                    </section>
+                    <!-- Gráfico -->
+                    <section class="mt-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur 
+                                    rounded-[2rem] border border-slate-200 dark:border-slate-800 
+                                    p-6 shadow-sm">
+
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">
+                                Estabilidade Ambiental (24h)
+                            </h3>
+                            <span class="text-xs text-slate-400">Atualização em tempo real</span>
+                        </div>
+
+                        <div class="h-[300px] w-full">
                             <canvas id="mainDashChart"></canvas>
                         </div>
+
                     </section>
                 </div>
 
